@@ -1,4 +1,4 @@
-include ../../common.mk
+include ./common.mk
 
 SRCS_ASM = \
 	start.S \
