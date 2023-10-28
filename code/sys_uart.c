@@ -28,21 +28,21 @@
 
 
 typedef unsigned int u32_t;
-typedef unsigned long long virtual_addr_t;
+typedef unsigned long long addr_t;
 
-static void write32(virtual_addr_t addr, u32_t value)
+static void write32(addr_t addr, u32_t value)
 {
 	*((volatile u32_t *)(addr)) = value;
 }
 
-static u32_t read32(virtual_addr_t addr)
+static u32_t read32(addr_t addr)
 {
 	return( *((volatile u32_t *)(addr)) );
 }
 
 void uart_init(void)
 {
-	virtual_addr_t addr;
+	addr_t addr;
 	u32_t val;
 
 	/* Config uart0 to 115200-8-1-0 */
@@ -66,9 +66,9 @@ void uart_init(void)
 
 void sys_uart_putc(char c)
 {
-	virtual_addr_t addr = 0x02500000;
+	addr_t addr = 0x02500000;
 
-	while((read32(addr + 0x7c) & (0x1 << 1)) == 0);
+	while((read32(addr + 0x7c) & (0x1 << 1)) == 0);	// TX寄存器
 	write32(addr + 0x00, c);
 }
 
