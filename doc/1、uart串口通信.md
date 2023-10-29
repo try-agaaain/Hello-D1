@@ -94,10 +94,11 @@ void sys_uart_putc(char ch)
 重复上一节的方式，翻阅手册去了解相关寄存器的设置，得到如下代码用于设置波特率和每次传输的比特长度：
 
 ```c
+
 	addr = 0x02500000;	// 第0块UART的起始地址
 
-	// 在默认情况下，0x04处为UART_IER寄存器，将其设置为0以关闭中断
-	write32(addr + 0x04, 0x0);  
+	// 在默认情况下，0x04处为UART_IER寄存器，将所有中断设置为0以关闭中断
+	write32(addr + 0x04, 0x00);
 	
 	// 将0x0c的UART_LCR第8位设置位1，其他位保持不变，0x00被选为UART_DLL寄存器，0x04被选为UART_DLH寄存器
 	val = read32(addr + 0x0c);
@@ -106,18 +107,19 @@ void sys_uart_putc(char ch)
 	// 设置0x00的UART_DLL为0x0d，即13，对应波特率为115200
 	write32(addr + 0x00, 0x0d);
 	// 设置0x04的UART_DLM为0x00，即将波特率的高8位设置位0
-	write32(addr + 0x04, 0x00);
+	write32(addr + 0x04, 0x000d >> 8);
 
 	// 将0x0c的UART_LCR第8位设置位0，0x00被选为UART_RBR/UART_THR，0x04处被选为UART_IER
 	val = read32(addr + 0x0c);
 	val &= ~(1 << 7);
 	write32(addr + 0x0c, val);
 	
-	// 保持0x0c的UART_LCR高2:31位不变，将低2位设置为11，表示数据长度为8bit
+    // 保持0x0c的UART_LCR高4:31位不变，将低2位设置为11，表示数据长度为8bit
+    // 第3位设置为0，表示stop比特的长度为1、第4位设置为0表示不对数据进行校验
 	val = read32(addr + 0x0c);
-	val &= ~0x02;
-	val |= 0x3;
-	write32(addr + 0x0c, val);
+	val &= ~0x0f;
+	val |= (0x3 << 0) | (0x0 << 2) | (0x0 << 3);
+    write32(addr + 0x0c, val);
 ```
 
 上面所有这些设置都可以在D1芯片手册中找到，就是过程挺麻烦的qwq。

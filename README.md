@@ -1,4 +1,4 @@
-## Hello-Dock
+## Hello-D1
 
 这是一个简单的hello程序，可以在LicheeRV Dock开发板裸机环境下运行。它的功能很简单：向uart输出“hello，world”。
 
@@ -6,11 +6,11 @@
 
 ### 编译方式
 
-在Ubuntu 20.04环境下，可以直接使用官方的GNU工具链和QEMU模拟器，执行以下命令安装并编译：
+在Ubuntu 20.04环境下，可以直接使用官方的GNU工具链，执行以下命令安装并编译：
 
 ```shell
 $ sudo apt update
-$ sudo apt install build-essential gcc make perl dkms git gcc-riscv64-unknown-elf gdb-multiarch qemu-system-misc
+$ sudo apt install build-essential gcc make perl dkms git gcc-riscv64-unknown-elf gdb-multiarch
 $ make
 ```
 
@@ -29,8 +29,8 @@ $ make
 左侧为执行命令，右侧程序输出为：
 
 ```
-########################################
-####          Hello, RISC-V!          ####
-########################################
+###########################################
+####        Hello, D1 & RISC-V!        ####
+###########################################
 ```
 
