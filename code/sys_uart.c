@@ -45,22 +45,29 @@ void uart_init(void)
 	addr_t addr;
 	u32_t val;
 
-	/* Config uart0 to 115200-8-1-0 */
-	addr = 0x02500000;
-	write32(addr + 0x04, 0x0);  // TX/RX holding register interrupts are both disabled
-	write32(addr + 0x08, 0xf7); // IIR
-	write32(addr + 0x10, 0x0);
+	addr = 0x02500000;	// 第0块UART的起始地址
+
+	// 在默认情况下，0x04处为UART_IER寄存器，将其设置为0以关闭中断
+	write32(addr + 0x04, 0x0);
+	
+	// 将0x0c的UART_LCR第8位设置位1，其他位保持不变，0x00被选为UART_DLL寄存器，0x04被选为UART_DLH寄存器
 	val = read32(addr + 0x0c);
 	val |= (1 << 7);
 	write32(addr + 0x0c, val);
-	write32(addr + 0x00, 0xd & 0xff);
-	write32(addr + 0x04, (0xd >> 8) & 0xff);
+	// 设置0x00的UART_DLL为0x0d，即13，对应波特率为115200
+	write32(addr + 0x00, 0x0d);
+	// 设置0x04的UART_DLM为0x00，即将波特率的高8位设置位0
+	write32(addr + 0x04, 0x00);
+
+	// 将0x0c的UART_LCR第8位设置位0，0x00被选为UART_RBR/UART_THR，0x04处被选为UART_IER
 	val = read32(addr + 0x0c);
 	val &= ~(1 << 7);
 	write32(addr + 0x0c, val);
+	
+	// 保持0x0c的UART_LCR高2:31位不变，将低2位设置为11，表示数据长度为8bit
 	val = read32(addr + 0x0c);
-	val &= ~0x1f;
-	val |= (0x3 << 0) | (0 << 2) | (0x0 << 3);
+	val &= ~0x02;
+	val |= 0x3;
 	write32(addr + 0x0c, val);
 }
 

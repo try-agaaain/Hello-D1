@@ -15,7 +15,7 @@ all: os.elf
 
 # start.o must be the first in dependency!
 os.elf: ${OBJS}
-	${CC} ${CFLAGS} -Ttext=0x48000000 -o os.elf $^
+	${CC} ${CFLAGS} -Ttext=0x40000000 -o os.elf $^
 	${OBJCOPY} -O binary os.elf os.bin
 
 %.o : %.c

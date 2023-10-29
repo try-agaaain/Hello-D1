@@ -1,3 +1,9 @@
+
+
+## 串口通信及编程
+
+[toc]
+
 ### 什么是UART？
 
 **UART**（Universal Asynchronous Receiver/Transmitter，**通用异步收发传输器**）是一种[异步收发传输器](https://zh.wikipedia.org/wiki/异步串行通信)，是[电脑硬件](https://zh.wikipedia.org/wiki/电脑硬件)的一部分，将数据通过[串列通信](https://zh.wikipedia.org/wiki/串列通訊)进行传输。显示屏上的COM接口中也存在UART引脚（右图）：
@@ -14,7 +20,7 @@
 
 ### 向UART写数据
 
-我们先看向UART写数据的C语言代码：
+在这个项目中，我们需要通过UART引脚向显示器输出"hello, world"，为此我们需要了解如何向UART写入数据，先给出对应的C语言代码：
 
 ```c
 // code for write uart
@@ -79,17 +85,17 @@ void sys_uart_putc(char ch)
 
 在这里比特率设置为115200 baud，即每秒可以传输115200个比特，串口线为COM5（可以在 设备管理器》串口 中确定）。
 
-主机显示这一侧设置好了，现在需要设置的就是开发板这一侧的波特率了。前面有说到`UART_DLL`寄存器用于设置波特率，为使其生效，需要设置`UART_LCR[7]`，同时设置`UART_USR[0]`为0，从D1芯片手册中找到寄存器的偏移地址分别为`0x000c`和`0x007c`：通过下面的代码进行设置：
+主机显示这一侧设置好了，现在需要设置的就是开发板这一侧的波特率了。前面有说到`UART_DLL`寄存器用于设置波特率，为使其生效，需要设置`UART_LCR[7]`，同时`UART_USR[0]`为0（上一次读写完成）。`UART_LCR[7]`需要手动设置，`UART_USR[0]`则在IO完成自动更新。从D1芯片手册中找到`UART_LCR`寄存器的偏移地址分别为`0x000c`。
+
+重复上一节的方式，翻阅手册去了解相关寄存器的设置，得到如下代码用于设置波特率和每次传输的比特长度：
 
 ```c
 	addr = 0x02500000;	// 第0块UART的起始地址
-	write32(addr + 0x04, 0x0);  // 0x00处的UART_DLL和0x04处的UART_DLM生效
-	// 将 设置为0，dai'a'k
-	write32(addr + 0x08, 0xf7); // IIR
-	// 0x10处的UART_DLM设置为全0，
-	write32(addr + 0x10, 0x0);
+
+	// 在默认情况下，0x04处为UART_IER寄存器，将其设置为0以关闭中断
+	write32(addr + 0x04, 0x0);  
 	
-	// 将0x0c的第8位设置位1，其他位保持不变，0x00被选为UART_DLL寄存器，0x04被选为UART_DLH寄存器
+	// 将0x0c的UART_LCR第8位设置位1，其他位保持不变，0x00被选为UART_DLL寄存器，0x04被选为UART_DLH寄存器
 	val = read32(addr + 0x0c);
 	val |= (1 << 7);
 	write32(addr + 0x0c, val);
@@ -98,69 +104,25 @@ void sys_uart_putc(char ch)
 	// 设置0x04的UART_DLM为0x00，即将波特率的高8位设置位0
 	write32(addr + 0x04, 0x00);
 
-	// 将0x0c的第8位设置位0，0x00被选为UART_RBR/UART_THR，0x04处的UART_IER生效
+	// 将0x0c的UART_LCR第8位设置位0，0x00被选为UART_RBR/UART_THR，0x04处被选为UART_IER
 	val = read32(addr + 0x0c);
 	val &= ~(1 << 7);
 	write32(addr + 0x0c, val);
 	
-	// 选中0x0c的3:32位不变，将低2位设置为11，表示数据长度为8bit
+	// 保持0x0c的UART_LCR高2:31位不变，将低2位设置为11，表示数据长度为8bit
 	val = read32(addr + 0x0c);
 	val &= ~0x02;
 	val |= 0x3;
 	write32(addr + 0x0c, val);
 ```
 
-<img src="img/image-20231028211310445.png" alt="image-20231028211310445" style="zoom:67%;" />
-
-### UART的初始化操作
-
-在上一小节中，通过`UART_THR`寄存器向显示器写入了数据，但这个过程远没有这么简单。回顾前面的内容：`UART_RBR`、`UART_THR`和`UART_DLL`三个寄存器是复用同一块地址的，为使得`UART_THR`生效，我们还需要进行初始化操作。
-
-```c
-// init for uart
-typedef unsigned int u32_t;
-typedef unsigned long long addr_t;
-
-static void write32(addr_t addr, u32_t value)
-{
-	*((volatile u32_t *)(addr)) = value;
-}
-
-static u32_t read32(addr_t addr)
-{
-	return( *((volatile u32_t *)(addr)) );
-}
-
-void uart_init(void)
-{
-	addr_t addr;
-	u32_t val;
-
-	/* Config uart0 to 115200-8-1-0 */
-	addr = 0x02500000;
-	write32(addr + 0x04, 0x0);  // TX/RX holding register interrupts are both disabled
-	write32(addr + 0x08, 0xf7); // IIR
-	write32(addr + 0x10, 0x0);
-	val = read32(addr + 0x0c);
-	val |= (1 << 7);
-	write32(addr + 0x0c, val);
-	write32(addr + 0x00, 0xd & 0xff);
-	write32(addr + 0x04, (0xd >> 8) & 0xff);
-	val = read32(addr + 0x0c);
-	val &= ~(1 << 7);
-	write32(addr + 0x0c, val);
-	val = read32(addr + 0x0c);
-	val &= ~0x1f;
-	val |= (0x3 << 0) | (0 << 2) | (0x0 << 3);
-	write32(addr + 0x0c, val);
-}
-```
+上面所有这些设置都可以在D1芯片手册中找到，就是过程挺麻烦的qwq。
 
 
 
 
 
-todo：UART_THR寄存器的补充
+
 
 
 
