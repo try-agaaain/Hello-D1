@@ -20,11 +20,13 @@ $ make
 
 [2、程序的移植和运行.md](./doc/2、程序的移植和运行.md)
 
+[3、补充内容.md](./doc/3、补充内容.md)
+
 ### 效果
 
 程序借用[xboot/xfel](https://github.com/xboot/xfel/tree/master)工具烧录到开发板的内存中并执行：
 
-![result](./doc/img/image-1.png)
+![result](./doc/img/result.png)
 
 左侧为执行命令，右侧程序输出为：
 
@@ -33,4 +35,4 @@ $ make
 ####        Hello, D1 & RISC-V!        ####
 ###########################################
 ```
-
+上面的测试是在Lichee RV Dock上进行的，由于Lichee RV Nezha和Lichee RV-86 Panel也采用D1芯片，所以在这两个开发板上应该也能通过测试。
