@@ -24,6 +24,5 @@
  */
 
 /* This machine puts UART registers here in physical memory. */
-// #define UART0 0x10000000L
 #define UART0 0x02500000L
 #endif /* __PLATFORM_H__ */

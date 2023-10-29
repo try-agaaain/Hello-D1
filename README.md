@@ -1,4 +1,4 @@
-#Hello-Dock
+## Hello-Dock
 
 这是一个简单的hello程序，可以在LicheeRV Dock开发板裸机环境下运行。它的功能很简单：向uart输出“hello，world”。
 
@@ -16,21 +16,21 @@ $ make
 
 ### Blog
 
-[1、uart串口通信.md][./doc/1、uart串口通信.md]
+[1、uart串口通信.md](./doc/1、uart串口通信.md)
 
 [2、程序的移植和运行.md](./doc/2、程序的移植和运行.md)
 
 ### 效果
 
-程序借用xfel工具烧录到开发板的内存中并执行：
+程序借用[xboot/xfel](https://github.com/xboot/xfel/tree/master)工具烧录到开发板的内存中并执行：
 
-![image-20231027163328485](img/README/image-20231027163328485.png)
+![result](./doc/img/image-1.png)
 
 左侧为执行命令，右侧程序输出为：
 
 ```
 ########################################
-####          Hello, RVOS!          ####
+####          Hello, RISC-V!          ####
 ########################################
 ```
 

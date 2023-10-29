@@ -75,7 +75,7 @@ void sys_uart_putc(char c)
 {
 	addr_t addr = 0x02500000;
 
-	while((read32(addr + 0x7c) & (0x1 << 1)) == 0);	// TX寄存器
+	while((read32(addr + 0x7c) & (0x1 << 1)) == 0);	// 当UART_USR[1]=0时阻塞读写
 	write32(addr + 0x00, c);
 }
 
